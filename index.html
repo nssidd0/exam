@@ -16,51 +16,10 @@
 </head>
 <body>
     <iframe src="https://script.google.com/macros/s/AKfycbwmUq9IRypwumrkOWxtU0sxcUxRM-GtKaU-JPIwbmS4Y8QHhhNmvyQ8iwOIWptNePooJw/exec" allowfullscreen></iframe>
-    <script>
-  // 1. Service Worker Register
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
-      .then(() => console.log('Service Worker Registered'));
-  }
-
-  // 2. Install Prompt Logic (User Gesture Fix)
-  let deferredPrompt;
-  const installModal = document.getElementById('pwaInstallModal');
-  const installBtn = document.getElementById('pwaInstallBtn');
-
-  // Browser jab install ke liye ready hoga, ye event chalega
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); // Default browser prompt roko
-    deferredPrompt = e; // Event ko save karo
-    
-    // 3 Second baad humara Custom Popup dikhao
-    setTimeout(() => {
-        installModal.classList.remove('hidden');
-    }, 3000);
-  });
-
-  // Jab user "Install Now" button dabayega
-  installBtn.addEventListener('click', async () => {
-    if (deferredPrompt) {
-      // Ab hum prompt dikha sakte hain kyunki user ne click kiya hai
-      deferredPrompt.prompt();
-      
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`User response: ${outcome}`);
-      
-      deferredPrompt = null;
-      installModal.classList.add('hidden'); // Modal band karo
-    }
-  });
-
-  function closeInstallModal() {
-      installModal.classList.add('hidden');
-  }
-</script>
     <div id="pwaInstallModal" class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
     <div class="bg-gray-900 border-2 border-red-600 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl relative">
         
-        <button onclick="closeInstallModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white">
+        <button id="pwaCloseBtn" class="absolute top-3 right-3 text-gray-400 hover:text-white">
             <i class="fa-solid fa-xmark text-xl"></i>
         </button>
 
@@ -76,8 +35,56 @@
         </button>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // A. Service Worker Register
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('Service Worker Registered'))
+      .catch((err) => console.log('SW Error:', err));
+  }
+
+  // B. Variables Setup
+  let deferredPrompt;
+  const installModal = document.getElementById('pwaInstallModal');
+  const installBtn = document.getElementById('pwaInstallBtn');
+  const closeBtn = document.getElementById('pwaCloseBtn');
+
+  // Check agar element nahi mila to error mat do (Safety Check)
+  if (!installModal || !installBtn || !closeBtn) return;
+
+  // C. Browser Event Capture
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); // Default rok do
+    deferredPrompt = e; // Event save karo
+    
+    // 3 Second baad Popup dikhao
+    setTimeout(() => {
+        installModal.classList.remove('hidden');
+    }, 3000);
+  });
+
+  // D. Install Button Click
+  installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt(); // Asli prompt dikhao
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`User response: ${outcome}`);
+      deferredPrompt = null;
+      installModal.classList.add('hidden'); // Modal band karo
+    }
+  });
+
+  // E. Close Button Click
+  closeBtn.addEventListener('click', () => {
+      installModal.classList.add('hidden');
+  });
+});
+</script>
 </body>
 
 </html>
+
 
 
