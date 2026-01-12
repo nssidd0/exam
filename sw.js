@@ -1,13 +1,13 @@
 self.addEventListener('install', (e) => {
+  // Yahan maine 'v2' kar diya hai
   e.waitUntil(
-    caches.open('ns-sidd-store').then((cache) => cache.addAll([
+    caches.open('ns-sidd-store-v2').then((cache) => cache.addAll([
       './index.html',
     ])),
   );
 });
 
 self.addEventListener('fetch', (e) => {
-  console.log(e.request.url);
   e.respondWith(
     caches.match(e.request).then((response) => response || fetch(e.request)),
   );
