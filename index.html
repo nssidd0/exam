@@ -40,50 +40,45 @@
 document.addEventListener('DOMContentLoaded', () => {
   console.log("PWA Script Loaded...");
 
-  // A. Service Worker Register
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
       .then(() => console.log('✅ Service Worker Registered'))
       .catch((err) => console.log('❌ SW Error:', err));
   }
 
-  // B. Variables Setup
   let deferredPrompt;
   const installModal = document.getElementById('pwaInstallModal');
   const installBtn = document.getElementById('pwaInstallBtn');
   const closeBtn = document.getElementById('pwaCloseBtn');
 
-  // C. Browser Event Capture
   window.addEventListener('beforeinstallprompt', (e) => {
     console.log("🔥 App Install Event Fired!");
-    e.preventDefault(); // Default rok do
-    deferredPrompt = e; // Event save karo
+    e.preventDefault();
+    deferredPrompt = e;
     
-    // 3 Second baad Popup dikhao
     setTimeout(() => {
-    console.log("Showing Custom Popup...");
-    installModal.style.display = 'flex'; // <-- Force Show
-}, 3000);
+        console.log("Showing Custom Popup (Force Flex)...");
+        // Direct CSS Style Change (100% Works)
+        installModal.style.display = 'flex'; 
+    }, 3000);
   });
 
-  // D. Install Button Click
   installBtn.addEventListener('click', async () => {
     if (deferredPrompt) {
-      deferredPrompt.prompt(); // Asli prompt dikhao
+      deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       console.log(`User response: ${outcome}`);
       deferredPrompt = null;
-      installModal.style.display = 'none';
+      installModal.style.display = 'none'; // Force Hide
     }
   });
 
-  // E. Close Button Click
   closeBtn.addEventListener('click', () => {
-      console.log("Popup Closed by User");
-      installModal.style.display = 'none';
+      installModal.style.display = 'none'; // Force Hide
   });
 });
 </script>
 </body>
 </html>
+
 
