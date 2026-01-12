@@ -16,51 +16,53 @@
 </head>
 <body>
     <iframe src="https://script.google.com/macros/s/AKfycbwmUq9IRypwumrkOWxtU0sxcUxRM-GtKaU-JPIwbmS4Y8QHhhNmvyQ8iwOIWptNePooJw/exec" allowfullscreen></iframe>
-    <div id="pwaInstallModal" style="display: none;" class="fixed inset-0 z-[9999] items-center justify-center bg-black/90 backdrop-blur-md p-4">
-    <div class="bg-gray-900 border-2 border-red-600 rounded-2xl p-6 max-w-sm w-full text-center shadow-[0_0_50px_rgba(220,38,38,0.5)] relative animate-bounce">
-        
-        <button id="pwaCloseBtn" class="absolute top-3 right-3 text-gray-400 hover:text-white bg-gray-800 rounded-full w-8 h-8 flex items-center justify-center">
-            <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-
-        <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <i class="fa-solid fa-download text-2xl text-white"></i>
-        </div>
-
-        <h3 class="text-xl font-black text-white mb-2">INSTALL APP</h3>
-        <p class="text-gray-300 text-sm mb-6">Install <b>NS SIDD TUTORIAL</b> app for faster access and offline mode.</p>
-
-        <button id="pwaInstallBtn" class="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-bold py-3 rounded-xl shadow-lg transition transform active:scale-95 uppercase tracking-wide">
-            Install Now 🚀
-        </button>
-    </div>
-</div>
-
-<script>
+    <script>
 document.addEventListener('DOMContentLoaded', () => {
-  console.log("🚀 Final PWA Script Loaded...");
-
+  
+  // 1. Service Worker Setup
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
-      .then(() => console.log('✅ Service Worker Active'))
-      .catch((err) => console.log('❌ SW Error:', err));
+      .then(() => console.log('SW Registered'))
+      .catch((err) => console.log('SW Error:', err));
   }
 
+  // 2. HTML Create Karo (Automatic)
+  const popupHTML = `
+    <div id="pwaInstallModal" style="display: none; position: fixed; inset: 0; z-index: 2147483647; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+        <div style="background-color: #111827; border: 2px solid #dc2626; padding: 24px; border-radius: 16px; width: 100%; max-width: 320px; text-align: center; box-shadow: 0 0 50px rgba(220,38,38,0.5); position: relative;">
+            
+            <button id="pwaCloseBtn" style="position: absolute; top: 12px; right: 12px; background: none; border: none; color: #9ca3af; font-size: 20px; cursor: pointer;">✕</button>
+
+            <div style="width: 64px; height: 64px; background-color: #dc2626; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+                <span style="font-size: 30px;">📲</span>
+            </div>
+
+            <h3 style="color: white; font-size: 20px; font-weight: 900; margin-bottom: 8px; font-family: sans-serif;">INSTALL APP</h3>
+            <p style="color: #d1d5db; font-size: 14px; margin-bottom: 24px; font-family: sans-serif;">Install <b>NS SIDD TUTORIAL</b> for better experience.</p>
+
+            <button id="pwaInstallBtn" style="width: 100%; background: linear-gradient(to right, #dc2626, #ea580c); color: white; font-weight: bold; padding: 12px; border-radius: 10px; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;">
+                Install Now 🚀
+            </button>
+        </div>
+    </div>
+  `;
+
+  // Body ke end mein HTML inject karo
+  document.body.insertAdjacentHTML('beforeend', popupHTML);
+
+  // 3. Logic Setup
   let deferredPrompt;
-  const installModal = document.getElementById('pwaInstallModal');
+  const modal = document.getElementById('pwaInstallModal');
   const installBtn = document.getElementById('pwaInstallBtn');
   const closeBtn = document.getElementById('pwaCloseBtn');
 
   window.addEventListener('beforeinstallprompt', (e) => {
-    console.log("🔥 App Install Event Caught!");
-    e.preventDefault(); // Browser ka default prompt roko
-    deferredPrompt = e; // Event save karo
+    e.preventDefault();
+    deferredPrompt = e;
     
-    // 3 Second baad zabardasti Popup dikhao
+    // 3 Second baad dikhao
     setTimeout(() => {
-        console.log("⚡ FORCE SHOWING POPUP NOW!");
-        // Ye line HTML ke 'display: none' ko kaat kar 'flex' kar degi
-        installModal.style.display = 'flex'; 
+        modal.style.display = 'flex'; // Zabardasti dikhao
     }, 3000);
   });
 
@@ -68,19 +70,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      console.log(`User response: ${outcome}`);
+      console.log('User choice:', outcome);
       deferredPrompt = null;
-      installModal.style.display = 'none';
+      modal.style.display = 'none';
     }
   });
 
   closeBtn.addEventListener('click', () => {
-      installModal.style.display = 'none';
+      modal.style.display = 'none';
   });
 });
 </script>
 </body>
 </html>
+
 
 
 
