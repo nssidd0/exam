@@ -16,7 +16,7 @@
 </head>
 <body>
     <iframe src="https://script.google.com/macros/s/AKfycbwmUq9IRypwumrkOWxtU0sxcUxRM-GtKaU-JPIwbmS4Y8QHhhNmvyQ8iwOIWptNePooJw/exec" allowfullscreen></iframe>
-    <div id="pwaInstallModal" style="display: none;" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+    <div id="pwaInstallModal" style="display: none;" class="fixed inset-0 z-[9999] items-center justify-center bg-black/90 backdrop-blur-md p-4">
     <div class="bg-gray-900 border-2 border-red-600 rounded-2xl p-6 max-w-sm w-full text-center shadow-[0_0_50px_rgba(220,38,38,0.5)] relative animate-bounce">
         
         <button id="pwaCloseBtn" class="absolute top-3 right-3 text-gray-400 hover:text-white bg-gray-800 rounded-full w-8 h-8 flex items-center justify-center">
@@ -38,11 +38,11 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  console.log("PWA Script Loaded...");
+  console.log("🚀 Final PWA Script Loaded...");
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
-      .then(() => console.log('✅ Service Worker Registered'))
+      .then(() => console.log('✅ Service Worker Active'))
       .catch((err) => console.log('❌ SW Error:', err));
   }
 
@@ -52,13 +52,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeBtn = document.getElementById('pwaCloseBtn');
 
   window.addEventListener('beforeinstallprompt', (e) => {
-    console.log("🔥 App Install Event Fired!");
-    e.preventDefault();
-    deferredPrompt = e;
+    console.log("🔥 App Install Event Caught!");
+    e.preventDefault(); // Browser ka default prompt roko
+    deferredPrompt = e; // Event save karo
     
+    // 3 Second baad zabardasti Popup dikhao
     setTimeout(() => {
-        console.log("Showing Custom Popup (Force Flex)...");
-        // Direct CSS Style Change (100% Works)
+        console.log("⚡ FORCE SHOWING POPUP NOW!");
+        // Ye line HTML ke 'display: none' ko kaat kar 'flex' kar degi
         installModal.style.display = 'flex'; 
     }, 3000);
   });
@@ -69,16 +70,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const { outcome } = await deferredPrompt.userChoice;
       console.log(`User response: ${outcome}`);
       deferredPrompt = null;
-      installModal.style.display = 'none'; // Force Hide
+      installModal.style.display = 'none';
     }
   });
 
   closeBtn.addEventListener('click', () => {
-      installModal.style.display = 'none'; // Force Hide
+      installModal.style.display = 'none';
   });
 });
 </script>
 </body>
 </html>
+
 
 
