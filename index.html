@@ -19,42 +19,65 @@
     <script>
   // 1. Service Worker Register
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker
-      .register('./sw.js')
-      .then(() => { console.log('Service Worker Registered'); });
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('Service Worker Registered'));
   }
 
-  // 2. Install Popup Logic
+  // 2. Install Prompt Logic (User Gesture Fix)
   let deferredPrompt;
-  
-  // Browser ka default install prompt roko
+  const installModal = document.getElementById('pwaInstallModal');
+  const installBtn = document.getElementById('pwaInstallBtn');
+
+  // Browser jab install ke liye ready hoga, ye event chalega
   window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
+    e.preventDefault(); // Default browser prompt roko
+    deferredPrompt = e; // Event ko save karo
     
-    // Yahan hum ek custom button dikha sakte hain (Optional)
-    // Abhi ke liye hum 3 second baad automatic poochne ka try karenge
+    // 3 Second baad humara Custom Popup dikhao
     setTimeout(() => {
-        showInstallPromotion();
+        installModal.classList.remove('hidden');
     }, 3000);
   });
 
-  function showInstallPromotion() {
-      if (deferredPrompt) {
-          // User se poocho
-          if(confirm("📲 Install 'NS SIDD TUTORIAL' App for better experience?")) {
-              deferredPrompt.prompt();
-              deferredPrompt.userChoice.then((choiceResult) => {
-                  if (choiceResult.outcome === 'accepted') {
-                      console.log('User accepted the install prompt');
-                  }
-                  deferredPrompt = null;
-              });
-          }
-      }
+  // Jab user "Install Now" button dabayega
+  installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      // Ab hum prompt dikha sakte hain kyunki user ne click kiya hai
+      deferredPrompt.prompt();
+      
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`User response: ${outcome}`);
+      
+      deferredPrompt = null;
+      installModal.classList.add('hidden'); // Modal band karo
+    }
+  });
+
+  function closeInstallModal() {
+      installModal.classList.add('hidden');
   }
 </script>
+    <div id="pwaInstallModal" class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+    <div class="bg-gray-900 border-2 border-red-600 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl relative">
+        
+        <button onclick="closeInstallModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+
+        <div class="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg animate-bounce">
+            <i class="fa-solid fa-download text-2xl text-white"></i>
+        </div>
+
+        <h3 class="text-xl font-black text-white mb-2">INSTALL APP</h3>
+        <p class="text-gray-300 text-sm mb-6">Install <b>NS SIDD TUTORIAL</b> app for faster access and offline mode.</p>
+
+        <button id="pwaInstallBtn" class="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white font-bold py-3 rounded-xl shadow-lg transition transform active:scale-95 uppercase tracking-wide">
+            Install Now 🚀
+        </button>
+    </div>
+</div>
 </body>
 
 </html>
+
 
