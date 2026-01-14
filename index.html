@@ -61,7 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => { modal.style.display = 'flex'; }, 3000);
   });
 
+    // C. Install Button Click Handler (Dono ke liye)
   installBtn.addEventListener('click', async () => {
+
+      // CASE 1: ANDROID
     if (deferredPrompt) {
       // --- ANIMATION START ---
       // Button ka text aur style badlo taaki user ko lage kuch ho raha hai
@@ -86,6 +89,17 @@ document.addEventListener('DOMContentLoaded', () => {
           installBtn.disabled = false;
       }, 500); 
     }
+      // CASE 2: iPHONE (iOS)
+        else if (isIOS) {
+            // iPhone par direct install nahi hota, instruction deni padti hai
+            alert("iPhone par App install karne ke liye:\n\n1. Safari Browser mein 'Share' icon (Tir wala box) dabayein.\n2. Niche scroll karke 'Add to Home Screen' dabayein.");
+            modal.style.display = 'none'; // Alert ke baad modal band kar do
+        }
+        // CASE 3: DESKTOP/OTHERS (Agar event miss ho gaya)
+        else {
+            alert("Please use 'Add to Home Screen' from browser menu to install.");
+            modal.style.display = 'none';
+        }
   });
 
   closeBtn.addEventListener('click', () => {
@@ -95,3 +109,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
