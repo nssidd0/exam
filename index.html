@@ -17,31 +17,29 @@
 <body>
     <iframe src="https://script.google.com/macros/s/AKfycbwmUq9IRypwumrkOWxtU0sxcUxRM-GtKaU-JPIwbmS4Y8QHhhNmvyQ8iwOIWptNePooJw/exec" allowfullscreen></iframe>
     
-<script>
+    <script>
 document.addEventListener('DOMContentLoaded', () => {
   
-  // 1. Service Worker Setup
+  // --- 1. CHECK IF ALREADY INSTALLED (Standalone Mode) ---
+  // Agar App installed hai aur user App se khol raha hai, to yahi ruk jao.
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (isStandalone) {
+      console.log("App is running in standalone mode. No Install Popup needed.");
+      return; // Code execution stops here.
+  }
+
+  // --- 2. DEFINE DEVICE TYPE ---
+  // iOS (iPhone/iPad) detect karne ke liye
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+  // --- 3. Service Worker Setup ---
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
       .then(() => console.log('SW Registered'))
       .catch((err) => console.log('SW Error:', err));
   }
 
-  // --- STEP 1: CHECK IF APP IS ALREADY INSTALLED ---
-  // Agar user App mode (Standalone) mein hai, to yahi ruk jao.
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-  
-  if (isStandalone) {
-      console.log("App is already installed/running in standalone mode.");
-      return; // Code yahi khatam, popup nahi banega.
-  }
-
-  // --- STEP 2: DEFINE VARIABLES (isIOS Fix) ---
-  // iOS detection logic
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  let deferredPrompt; // Android ke liye event store karne ke liye
-
-  // --- STEP 3: CREATE POPUP HTML ---
+  // --- 4. CREATE HTML POPUP ---
   const popupHTML = `
     <div id="pwaInstallModal" style="display: none; position: fixed; inset: 0; z-index: 2147483647; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center; backdrop-filter: blur(5px);">
         <div style="background-color: #111827; border: 2px solid #dc2626; padding: 24px; border-radius: 16px; width: 100%; max-width: 320px; text-align: center; box-shadow: 0 0 50px rgba(220,38,38,0.5); position: relative;">
@@ -56,41 +54,42 @@ document.addEventListener('DOMContentLoaded', () => {
             <button id="pwaInstallBtn" style="width: 100%; background: linear-gradient(to right, #dc2626, #ea580c); color: white; font-weight: bold; padding: 12px; border-radius: 10px; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s;">
                 Install Now 🚀
             </button>
-            <button onclick="document.getElementById('pwaInstallModal').style.display='none'" style="margin-top: 10px; background: transparent; border: none; color: #6b7280; font-size: 12px; cursor: pointer;">Close / Later</button>
+            <button id="pwaCloseBtn" style="margin-top: 10px; background: transparent; color: #9ca3af; border: none; font-size: 12px; cursor: pointer;">Not Now</button>
         </div>
     </div>
   `;
 
   document.body.insertAdjacentHTML('beforeend', popupHTML);
-  
+
+  // --- 5. LOGIC SETUP ---
+  let deferredPrompt;
   const modal = document.getElementById('pwaInstallModal');
   const installBtn = document.getElementById('pwaInstallBtn');
+  const closeBtn = document.getElementById('pwaCloseBtn');
 
-  // --- STEP 4: TRIGGER LOGIC (Android vs iOS) ---
-
-  // A. Android/Desktop Logic (Standard)
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); // Browser ka default patti mat dikhao
-    deferredPrompt = e; // Event save karo
-    
-    // Popup dikhao 3 second baad
-    setTimeout(() => { 
-        modal.style.display = 'flex'; 
-    }, 3000);
+  // Close Button Logic (Optional UX improvement)
+  closeBtn.addEventListener('click', () => {
+      modal.style.display = 'none';
   });
 
-  // B. iOS Logic (Manual Trigger)
-  // Kyunki iOS 'beforeinstallprompt' fire nahi karta, agar iOS hai to hum manually dikhayenge
+  // CASE A: ANDROID / WINDOWS / CHROME (Standard Event)
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Android/PC par event aane par 3 second baad dikhao
+    setTimeout(() => { modal.style.display = 'flex'; }, 3000);
+  });
+
+  // CASE B: iOS (iPhone/iPad) Logic
+  // iOS 'beforeinstallprompt' support nahi karta, isliye agar iOS hai aur Standalone nahi hai to direct dikhao
   if (isIOS && !isStandalone) {
-      setTimeout(() => { 
-          modal.style.display = 'flex'; 
-      }, 3000);
+      setTimeout(() => { modal.style.display = 'flex'; }, 3000);
   }
 
-  // --- STEP 5: INSTALL BUTTON CLICK HANDLER ---
+  // --- 6. INSTALL BUTTON CLICK HANDLER ---
   installBtn.addEventListener('click', async () => {
 
-      // CASE 1: ANDROID / CHROME (Standard)
+      // SCENARIO 1: Android / Desktop (Event Available)
       if (deferredPrompt) {
           installBtn.innerHTML = "⏳ Opening...";
           installBtn.style.opacity = "0.7";
@@ -98,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
           installBtn.disabled = true;
 
           setTimeout(async () => {
-              deferredPrompt.prompt(); // Asli prompt fire karo
+              deferredPrompt.prompt();
               const { outcome } = await deferredPrompt.userChoice;
               console.log('User choice:', outcome);
               
@@ -111,18 +110,17 @@ document.addEventListener('DOMContentLoaded', () => {
               installBtn.disabled = false;
           }, 500); 
       }
-      // CASE 2: iPHONE (iOS)
+      // SCENARIO 2: iPhone / iPad (Manual Instructions)
       else if (isIOS) {
-          alert("iPhone par install karne ke liye:\n\n1. Safari Browser mein 'Share' icon (Tir wala box) dabayein.\n2. Niche scroll karke 'Add to Home Screen' dabayein.");
+          alert("iPhone par App install karne ke liye:\n\n1. Safari Browser mein 'Share' icon (Tir wala box) dabayein.\n2. Niche scroll karke 'Add to Home Screen' dabayein.");
           modal.style.display = 'none';
       }
-      // CASE 3: OTHERS (Agar event miss ho gaya par button dikh raha hai)
+      // SCENARIO 3: Desktop Fallback (No Event)
       else {
-          alert("Please use 'Add to Home Screen' from browser menu to install.");
+          alert("To install: Click the 'Install' icon in your browser address bar or Menu > Add to Home Screen.");
           modal.style.display = 'none';
       }
   });
-
 });
 </script>
 </body>
