@@ -18,29 +18,15 @@
     <iframe src="https://script.google.com/macros/s/AKfycbwmUq9IRypwumrkOWxtU0sxcUxRM-GtKaU-JPIwbmS4Y8QHhhNmvyQ8iwOIWptNePooJw/exec" allowfullscreen></iframe>
     <script>
 document.addEventListener('DOMContentLoaded', () => {
-
-  // --- 1. CONFIGURATION & CHECKS ---
   
-  // A. Standalone Check (Kya App pehle se installed hai?)
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-  // AGAR INSTALLED HAI, TO YAHIN RUK JAO (Code aage nahi chalega)
-  if (isStandalone) {
-      console.log("App is already installed/running in standalone mode.");
-      return; 
-  }
-
-  // B. Device Detection (iOS Define kiya)
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-  // --- 2. SERVICE WORKER ---
+  // 1. Service Worker Setup
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
       .then(() => console.log('SW Registered'))
       .catch((err) => console.log('SW Error:', err));
   }
 
-  // --- 3. CREATE POPUP HTML (Hidden by default) ---
+  // 2. HTML Create Karo
   const popupHTML = `
     <div id="pwaInstallModal" style="display: none; position: fixed; inset: 0; z-index: 2147483647; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center; backdrop-filter: blur(5px);">
         <div style="background-color: #111827; border: 2px solid #dc2626; padding: 24px; border-radius: 16px; width: 100%; max-width: 320px; text-align: center; box-shadow: 0 0 50px rgba(220,38,38,0.5); position: relative;">
@@ -55,85 +41,63 @@ document.addEventListener('DOMContentLoaded', () => {
             <button id="pwaInstallBtn" style="width: 100%; background: linear-gradient(to right, #dc2626, #ea580c); color: white; font-weight: bold; padding: 12px; border-radius: 10px; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s;">
                 Install Now 🚀
             </button>
-            
-            <button id="pwaCloseBtn" style="margin-top: 10px; background: transparent; border: none; color: #9ca3af; font-size: 12px; cursor: pointer; text-decoration: underline;">
-                Maybe Later
-            </button>
         </div>
     </div>
   `;
 
   document.body.insertAdjacentHTML('beforeend', popupHTML);
 
-  // --- 4. LOGIC HANDLERS ---
-  let deferredPrompt; // Event store karne ke liye
+  // 3. Logic Setup
+  let deferredPrompt;
   const modal = document.getElementById('pwaInstallModal');
   const installBtn = document.getElementById('pwaInstallBtn');
-  const closeBtn = document.getElementById('pwaCloseBtn');
 
-  // Function to Show Modal
-  const showModal = () => {
-      modal.style.display = 'flex';
-  };
-
-  // A. ANDROID / WINDOWS / DESKTOP (Jahan automatic install hota hai)
   window.addEventListener('beforeinstallprompt', (e) => {
-    // 1. Default install banner ko roko
     e.preventDefault();
-    // 2. Event ko baad ke liye save karo
     deferredPrompt = e;
-    // 3. Apna custom popup dikhao (3 second delay ke baad)
-    setTimeout(showModal, 3000);
+    setTimeout(() => { modal.style.display = 'flex'; }, 3000);
   });
 
-  // B. iOS / iPHONE / iPAD (Force Show Logic)
-  // iPhone automatic event fire nahi karta, isliye hum manually popup dikhayenge
-  if (isIOS && !isStandalone) {
-      setTimeout(showModal, 3000);
-  }
-
-  // --- 5. CLICK HANDLERS ---
-
-  // Close Button
-  closeBtn.addEventListener('click', () => {
-      modal.style.display = 'none';
-  });
-
-  // Install Button
+    // C. Install Button Click Handler (Dono ke liye)
   installBtn.addEventListener('click', async () => {
-      
-      // SCENARIO 1: Android/Windows (Event Available)
-      if (deferredPrompt) {
-          installBtn.innerHTML = "⏳ Opening...";
-          installBtn.style.opacity = "0.7";
-          installBtn.disabled = true;
 
-          // Prompt Show karo
+      // CASE 1: ANDROID
+    if (deferredPrompt) {
+      // --- ANIMATION START ---
+      // Button ka text aur style badlo taaki user ko lage kuch ho raha hai
+      installBtn.innerHTML = "⏳ Opening...";
+      installBtn.style.opacity = "0.7";
+      installBtn.style.cursor = "wait";
+      installBtn.disabled = true;
+      // -----------------------
+
+      // Thoda sa delay taaki animation dikhe, phir prompt khulega
+      setTimeout(async () => {
           deferredPrompt.prompt();
-          
-          // User ka decision wait karo
           const { outcome } = await deferredPrompt.userChoice;
           console.log('User choice:', outcome);
           
-          // Reset
           deferredPrompt = null;
-          modal.style.display = 'none';
+          modal.style.display = 'none'; // Kaam hone ke baad band karo
+          
+          // Button Reset (Agli baar ke liye)
           installBtn.innerHTML = "Install Now 🚀";
           installBtn.style.opacity = "1";
           installBtn.disabled = false;
-      } 
-      // SCENARIO 2: iOS (iPhone/iPad)
-      else if (isIOS) {
-          alert("📲 iOS Installation Guide:\n\n1. Safari Browser mein niche 'Share' icon (Tir wala box) dabayein.\n2. List mein niche scroll karein.\n3. 'Add to Home Screen' dabayein.\n4. Upar right mein 'Add' dabayein.");
-          modal.style.display = 'none';
-      }
-      // SCENARIO 3: Desktop/Other Browsers (Agar event miss ho gaya)
-      else {
-          alert("To install: Click the 'Install' icon in your browser's address bar or menu (⋮).");
-          modal.style.display = 'none';
-      }
+      }, 500); 
+    }
+      // CASE 2: iPHONE (iOS)
+        else if (isIOS) {
+            // iPhone par direct install nahi hota, instruction deni padti hai
+            alert("iPhone par App install karne ke liye:\n\n1. Safari Browser mein 'Share' icon (Tir wala box) dabayein.\n2. Niche scroll karke 'Add to Home Screen' dabayein.");
+            modal.style.display = 'none'; // Alert ke baad modal band kar do
+        }
+        // CASE 3: DESKTOP/OTHERS (Agar event miss ho gaya)
+        else {
+            alert("Please use 'Add to Home Screen' from browser menu to install.");
+            modal.style.display = 'none';
+        }
   });
-
 });
 </script>
 </body>
