@@ -41,60 +41,85 @@ document.addEventListener('DOMContentLoaded', () => {
             <button id="pwaInstallBtn" style="width: 100%; background: linear-gradient(to right, #dc2626, #ea580c); color: white; font-weight: bold; padding: 12px; border-radius: 10px; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s;">
                 Install Now 🚀
             </button>
+            <button id="pwaCloseBtn" style="margin-top: 10px; background: transparent; color: #9ca3af; border: none; cursor: pointer; font-size: 12px; text-decoration: underline;">
+                Maybe Later
+            </button>
         </div>
     </div>
   `;
 
   document.body.insertAdjacentHTML('beforeend', popupHTML);
 
-  // 3. Logic Setup
+  // 3. Logic Variables
   let deferredPrompt;
   const modal = document.getElementById('pwaInstallModal');
   const installBtn = document.getElementById('pwaInstallBtn');
+  const closeBtn = document.getElementById('pwaCloseBtn');
 
+  // --- CHECK IF APP IS ALREADY INSTALLED/RUNNING ---
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+
+  // Agar App pehle se installed mode me khuli hai, to code yahin rok do (Popup nahi aayega)
+  if (isStandalone) {
+      console.log("App is already installed and running in standalone mode.");
+      return; 
+  }
+
+  // --- CASE 1: ANDROID / DESKTOP (Event Listener) ---
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    setTimeout(() => { modal.style.display = 'flex'; }, 3000);
+    
+    // Sirf tab dikhao agar prompt available ho
+    setTimeout(() => { 
+        modal.style.display = 'flex'; 
+    }, 3000);
   });
 
-    // C. Install Button Click Handler (Dono ke liye)
-  installBtn.addEventListener('click', async () => {
+  // --- CASE 2: iOS (iPhone doesn't fire the event, so force show) ---
+  if (isIOS && !isStandalone) {
+      setTimeout(() => {
+          modal.style.display = 'flex';
+      }, 3000);
+  }
 
-      // CASE 1: ANDROID
+  // --- BUTTON CLICK HANDLERS ---
+
+  // Close Button (Taki user popup hata sake)
+  closeBtn.addEventListener('click', () => {
+      modal.style.display = 'none';
+  });
+
+  installBtn.addEventListener('click', async () => {
+      // ANDROID / CHROME
     if (deferredPrompt) {
-      // --- ANIMATION START ---
-      // Button ka text aur style badlo taaki user ko lage kuch ho raha hai
       installBtn.innerHTML = "⏳ Opening...";
       installBtn.style.opacity = "0.7";
       installBtn.style.cursor = "wait";
       installBtn.disabled = true;
-      // -----------------------
 
-      // Thoda sa delay taaki animation dikhe, phir prompt khulega
       setTimeout(async () => {
           deferredPrompt.prompt();
           const { outcome } = await deferredPrompt.userChoice;
           console.log('User choice:', outcome);
           
           deferredPrompt = null;
-          modal.style.display = 'none'; // Kaam hone ke baad band karo
+          modal.style.display = 'none';
           
-          // Button Reset (Agli baar ke liye)
           installBtn.innerHTML = "Install Now 🚀";
           installBtn.style.opacity = "1";
           installBtn.disabled = false;
       }, 500); 
     }
-      // CASE 2: iPHONE (iOS)
+      // iPHONE (iOS Instructions)
         else if (isIOS) {
-            // iPhone par direct install nahi hota, instruction deni padti hai
-            alert("iPhone par App install karne ke liye:\n\n1. Safari Browser mein 'Share' icon (Tir wala box) dabayein.\n2. Niche scroll karke 'Add to Home Screen' dabayein.");
-            modal.style.display = 'none'; // Alert ke baad modal band kar do
+            alert("iPhone par install karne ke liye:\n\n1. Safari Browser mein niche 'Share' icon (Tir wala box) dabayein.\n2. Niche scroll karke 'Add to Home Screen' dabayein.");
+            modal.style.display = 'none';
         }
-        // CASE 3: DESKTOP/OTHERS (Agar event miss ho gaya)
+        // DESKTOP/OTHERS (Fallback)
         else {
-            alert("Please use 'Add to Home Screen' from browser menu to install.");
+            alert("Please use 'Add to Home Screen' or 'Install App' from your browser menu.");
             modal.style.display = 'none';
         }
   });
@@ -102,5 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 
