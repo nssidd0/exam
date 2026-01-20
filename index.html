@@ -102,7 +102,37 @@
             modal.style.display = 'none';
         }
       });
+        // ==========================================
+      // 5. OFFLINE / NO INTERNET DETECTION
+      // ==========================================
+      
+      // HTML for Offline Message
+      const offlineHTML = `
+        <div id="offlineModal" style="display: none; position: fixed; inset: 0; z-index: 2147483648; background-color: #111827; align-items: center; justify-content: center; flex-direction: column; text-align: center;">
+            <div style="font-size: 50px; margin-bottom: 20px;">📡</div>
+            <h2 style="color: white; font-family: sans-serif; margin-bottom: 10px;">No Internet</h2>
+            <p style="color: #9ca3af; font-family: sans-serif;">Please check your connection.</p>
+            <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #dc2626; color: white; border: none; border-radius: 8px; font-weight: bold;">Try Again</button>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', offlineHTML);
+
+      function updateOnlineStatus() {
+        const offlineModal = document.getElementById('offlineModal');
+        if (navigator.onLine) {
+            offlineModal.style.display = 'none';
+        } else {
+            offlineModal.style.display = 'flex';
+        }
+      }
+
+      window.addEventListener('online', updateOnlineStatus);
+      window.addEventListener('offline', updateOnlineStatus);
+      
+      // Check on load
+      updateOnlineStatus();
     });
     </script>
 </body>
 </html>
+
