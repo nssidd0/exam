@@ -12,6 +12,18 @@
     <style>
         body, html { margin:0; padding:0; height:100%; overflow:hidden; background-color: #111827; }
         iframe { border:none; width:100%; height:100%; }
+        
+        /* CSS Animation for the Install Icon */
+        @keyframes bounce-arrow {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-10px);}
+            60% {transform: translateY(-5px);}
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        }
     </style>
 </head>
 <body>
@@ -20,34 +32,40 @@
     <script>
     document.addEventListener('DOMContentLoaded', () => {
       
-      // 1. Service Worker Setup
+      // 1. Service Worker
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js')
           .then(() => console.log('SW Registered'))
           .catch((err) => console.log('SW Error:', err));
       }
 
-      // 2. iOS Detection Helper
+      // 2. iOS Detection
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-      // 3. HTML Create Karo (Close button HATA DIYA GAYA HAI)
+      // 3. Popup HTML (With CSS Animation - No GIF)
       const popupHTML = `
-        <div id="pwaInstallModal" style="display: none; position: fixed; inset: 0; z-index: 2147483647; background-color: rgba(0,0,0,0.85); align-items: center; justify-content: center; backdrop-filter: blur(5px);">
-            <div style="background-color: #111827; border: 2px solid #dc2626; padding: 30px 24px; border-radius: 16px; width: 90%; max-width: 320px; text-align: center; box-shadow: 0 0 50px rgba(220,38,38,0.3); position: relative;">
+        <div id="pwaInstallModal" style="display: none; position: fixed; inset: 0; z-index: 2147483647; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+            <div style="background-color: #111827; border: 1px solid #374151; padding: 30px 24px; border-radius: 20px; width: 90%; max-width: 320px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); position: relative;">
             
-                <div style="width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; overflow: hidden; border: 2px solid #dc2626;">
-                    
-                    <img src="https://tenor.com/szEoEoHiK1v.gif" 
-                         alt="Install Animation" 
-                         style="width: 100%; height: 100%; object-fit: cover;">
-                
+                <div style="
+                    width: 70px; 
+                    height: 70px; 
+                    background: linear-gradient(135deg, #dc2626, #ef4444); 
+                    border-radius: 50%; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    margin: 0 auto 20px auto; 
+                    animation: pulse-ring 2s infinite;
+                ">
+                    <span style="font-size: 32px; color: white; animation: bounce-arrow 2s infinite;">⬇️</span>
                 </div>
 
-                <h3 style="color: white; font-size: 22px; font-weight: 900; margin-bottom: 10px; font-family: sans-serif; letter-spacing: 1px;">INSTALL APP</h3>
-                <p style="color: #d1d5db; font-size: 14px; margin-bottom: 25px; font-family: sans-serif; line-height: 1.5;">Install <b>NS SIDD TUTORIAL</b> for the best fullscreen experience.</p>
+                <h3 style="color: white; font-size: 22px; font-weight: 800; margin-bottom: 8px; font-family: system-ui, -apple-system, sans-serif;">Install App</h3>
+                <p style="color: #9ca3af; font-size: 14px; margin-bottom: 24px; font-family: system-ui, -apple-system, sans-serif; line-height: 1.5;">Get the full screen experience with faster access.</p>
 
-                <button id="pwaInstallBtn" style="width: 100%; background: linear-gradient(to right, #dc2626, #ea580c); color: white; font-weight: bold; padding: 14px; border-radius: 12px; border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s; font-size: 16px; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);">
-                    Install Now 🚀
+                <button id="pwaInstallBtn" style="width: 100%; background: white; color: black; font-weight: 700; padding: 14px; border-radius: 12px; border: none; cursor: pointer; font-size: 16px; transition: transform 0.2s;">
+                    Install Now
                 </button>
             </div>
         </div>
@@ -55,59 +73,36 @@
 
       document.body.insertAdjacentHTML('beforeend', popupHTML);
 
-      // 4. Logic Setup
+      // 4. Logic
       let deferredPrompt;
       const modal = document.getElementById('pwaInstallModal');
       const installBtn = document.getElementById('pwaInstallBtn');
-      // Close Button ka variable भी हटा दिया है।
 
-      // Prevent immediate prompt and show modal after 3 seconds
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        // 3 सेकंड बाद पॉपअप खुलेगा
         setTimeout(() => { modal.style.display = 'flex'; }, 3000);
       });
 
-      // Handle Install Click
       installBtn.addEventListener('click', async () => {
+        // Simple Bounce Animation on Click
+        installBtn.style.transform = "scale(0.95)";
+        setTimeout(()=> installBtn.style.transform = "scale(1)", 150);
 
-          // CASE 1: ANDROID / CHROME
         if (deferredPrompt) {
-          installBtn.innerHTML = "⏳ Opening...";
-          installBtn.style.opacity = "0.7";
-          installBtn.disabled = true;
-
-          setTimeout(async () => {
-              // सिस्टम का इंस्टॉल प्रॉम्प्ट दिखाएं
-              deferredPrompt.prompt();
-              const { outcome } = await deferredPrompt.userChoice;
-              console.log('User choice:', outcome);
-              
-              // यूज़र ने इंस्टॉल किया या कैंसिल, उसके बाद ही पॉपअप बंद होगा
-              deferredPrompt = null;
-              modal.style.display = 'none'; 
-              
-              // बटन को रीसेट करें
-              installBtn.innerHTML = "Install Now 🚀";
-              installBtn.style.opacity = "1";
-              installBtn.disabled = false;
-          }, 500); 
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            modal.style.display = 'none'; 
+        } else if (isIOS) {
+            alert("Tap Share Icon > Add to Home Screen");
+            modal.style.display = 'none';
+        } else {
+            alert("App already installed.");
+            modal.style.display = 'none';
         }
-          // CASE 2: iPHONE (iOS)
-            else if (isIOS) {
-                // iOS वालों को अलर्ट दिखाने के बाद पॉपअप बंद होगा
-                alert("iPhone par install karne ke liye:\n\n1. Safari mein 'Share' icon (Tir wala box) dabayein.\n2. Niche scroll karke 'Add to Home Screen' select karein.");
-                modal.style.display = 'none';
-            }
-            // CASE 3: OTHERS (अगर पहले से इंस्टॉल है या डेस्कटॉप है)
-            else {
-                alert("App already installed or please use browser menu to 'Add to Home Screen'.");
-                modal.style.display = 'none';
-            }
       });
     });
     </script>
 </body>
 </html>
-
