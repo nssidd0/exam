@@ -47,7 +47,7 @@
   function requestPermission() {
     Notification.requestPermission().then((permission) => {
       if (permission === 'granted') {
-        messaging.getToken({ vapidKey: 'YOUR_PUBLIC_VAPID_KEY' })
+        messaging.getToken({ vapidKey: 'BMitqK41ER5eYEeyYHPDUgYWJOnyoPsph4H3mzQQYWwmsLBCndPHkJUKe5P-cxmuwELg3VLIzsdisBsLOCrEu8U' })
           .then((currentToken) => {
             if (currentToken) {
               console.log("Student Token:", currentToken);
