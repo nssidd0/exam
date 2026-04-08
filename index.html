@@ -29,7 +29,8 @@
 <body>
     <iframe src="https://script.google.com/macros/s/AKfycbwkSXbezhGZ_Zaf7LhlSC8AtJRqeCmNAKWvMTz7AS7-ckFdHrqJrjmzvHEkbeAEslocGg/exec" allowfullscreen></iframe>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-analytics-compat.js"></script>
     
     <script>
         const firebaseConfig = {
@@ -39,6 +40,8 @@
     messagingSenderId: "17196140740",
     appId: "1:17196140740:web:0d1f81dca27d9d283ae191"
   };
+
+        const analytics = firebase.analytics();
 
   firebase.initializeApp(firebaseConfig);
   const messaging = firebase.messaging();
