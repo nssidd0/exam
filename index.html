@@ -28,8 +28,38 @@
 </head>
 <body>
     <iframe src="https://script.google.com/macros/s/AKfycbwkSXbezhGZ_Zaf7LhlSC8AtJRqeCmNAKWvMTz7AS7-ckFdHrqJrjmzvHEkbeAEslocGg/exec" allowfullscreen></iframe>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
     
     <script>
+        const firebaseConfig = {
+    apiKey: "AIzaSyDuj1rzRh1MxqePXlXYYnT9mbM6R05O--Y",
+    authDomain: "ns-sidd-notifications.firebaseapp.com",
+    projectId: "ns-sidd-notifications",
+    messagingSenderId: "17196140740",
+    appId: "1:17196140740:web:0d1f81dca27d9d283ae191"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const messaging = firebase.messaging();
+
+  // Permission maangna aur Token lena
+  function requestPermission() {
+    Notification.requestPermission().then((permission) => {
+      if (permission === 'granted') {
+        messaging.getToken({ vapidKey: 'YOUR_PUBLIC_VAPID_KEY' })
+          .then((currentToken) => {
+            if (currentToken) {
+              console.log("Student Token:", currentToken);
+            }
+          });
+      }
+    });
+  }
+
+  // App load hote hi permission maangein
+  window.addEventListener('load', requestPermission);
+        
     document.addEventListener('DOMContentLoaded', () => {
       
       // 1. Service Worker
